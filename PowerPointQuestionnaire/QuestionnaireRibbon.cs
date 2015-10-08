@@ -24,7 +24,6 @@ namespace PowerPointQuestionnaire
 #endif
 
         private LoginWindow _loginWindow;
-        private QuestionnaireOptionsWindow _questionnaireOptionsWindow;
 
         private const string ChoiceString = "ABCDEFGH";
 
@@ -48,9 +47,6 @@ namespace PowerPointQuestionnaire
 
             _loginWindow = new LoginWindow();
             _loginWindow.Closed += LoginWindowClosed;
-
-            _questionnaireOptionsWindow = new QuestionnaireOptionsWindow();
-            _questionnaireOptionsWindow.Closed += QuestionnaireOptionsWindowClosed;
         }
 
         private void App_SlideShowNextSlide(PowerPoint.SlideShowWindow Wn)
@@ -59,23 +55,13 @@ namespace PowerPointQuestionnaire
 
             var slide = Wn.Presentation.Slides[index];
 
-            if (_questionnaireUtil.Check(slide))
-            {
-                var questioinnaireId = _questionnaireUtil.Deserialize(slide).id;
-                Process.Start(baseUrl + "questionnaires/" + questioinnaireId);
-            }
+            GoToSlidePage(slide);
         }
 
         private void LoginWindowClosed(object sender, EventArgs e)
         {
             _loginWindow = new LoginWindow();
             _loginWindow.Closed += LoginWindowClosed;
-        }
-
-        private void QuestionnaireOptionsWindowClosed(object sender, EventArgs e)
-        {
-            _questionnaireOptionsWindow = new QuestionnaireOptionsWindow();
-            _questionnaireOptionsWindow.Closed += QuestionnaireOptionsWindowClosed;
         }
 
         private void App_PresentationOpen(PowerPoint.Presentation Pres)
@@ -149,7 +135,7 @@ namespace PowerPointQuestionnaire
 
         private PowerPoint.Slide AddSlideByQuestionnaire(QuestionnaireModel questionnaire)
         {
-            var index = (_selectedSlide?.SlideIndex ?? Globals.ThisAddIn.Application.ActivePresentation.Slides.Count) + 1;
+            var index = Globals.ThisAddIn.Application.ActivePresentation.Slides.Count + 1;
 
             var slide = AppWapper.App.ActivePresentation.Slides.Add(index, PowerPoint.PpSlideLayout.ppLayoutBlank);
 
@@ -171,9 +157,6 @@ namespace PowerPointQuestionnaire
 
         private async void CreateQuestionnaireSlideRecord(PowerPoint.Slide slide, QuestionnaireModel questionnaire)
         {
-            var tempFile = await _questionnaireUtil.UploadAsync(slide);
-            questionnaire.tempFileId = tempFile._id;
-
             try
             {
                 var created = await _questionnaireUtil.CreateAsync(questionnaire);
@@ -182,46 +165,9 @@ namespace PowerPointQuestionnaire
             catch (WebException)
             {
                 slide.Delete();
-                MessageBox.Show("问卷添加失败了,这可能是个网络错误");
+                MessageBox.Show("问卷添加失败了, 这可能是个网络错误.");
             }
         }
-
-        private async void UpdateSelectedSlide(PowerPoint.Slide slide, QuestionnaireModel questionnaire, Action callback = null)
-        {
-            var questionnaireToUpdate = _questionnaireUtil.Get(questionnaire.id);
-
-            var md5Now = _questionnaireUtil.GetSlideMd5(slide);
-
-            var flag = false;
-
-            if (questionnaireToUpdate.image == null || questionnaireToUpdate.image.md5 != md5Now)
-            {
-                flag = true;
-                var tempFile = await _questionnaireUtil.UploadAsync(slide);
-                questionnaireToUpdate.tempFileId = tempFile._id;
-            }
-
-            if (!_questionnaireUtil.Compare(questionnaireToUpdate, questionnaire))
-            {
-                flag = true;
-                questionnaireToUpdate.choices = questionnaire.choices;
-            }
-
-            if (!flag) return;
-
-            try
-            {
-                var updated = await _questionnaireUtil.UpdateAsync(questionnaireToUpdate);
-                _questionnaireUtil.Mark(slide, updated);
-                callback();
-            }
-            catch
-            {
-                MessageBox.Show("问卷同步失败了,这可能是个网络错误");
-            }
-        }
-
-
 
         private void App_SlideSelectionChanged(PowerPoint.SlideRange SldRange)
         {
@@ -236,13 +182,14 @@ namespace PowerPointQuestionnaire
             RefreshSetAndAdd();
         }
 
-        private void addNewQuestionnaireSlideButton_Click(object sender, RibbonControlEventArgs e)
+        private void addNewSlideButton_Click(object sender, RibbonControlEventArgs e)
         {
-            if (_questionnaireOptionsWindow.ShowDialog() == true)
+            var window = new QuestionnaireOptionsWindow();
+            if (window.ShowDialog() == true)
             {
-                var questionnaire = new QuestionnaireModel()
+                var questionnaire = new QuestionnaireModel
                 {
-                    choices = (int)_questionnaireOptionsWindow.ChoicesComboBox.SelectionBoxItem
+                    choices = (int)window.ChoicesComboBox.SelectionBoxItem
                 };
 
                 var slide = AddSlideByQuestionnaire(questionnaire);
@@ -263,35 +210,36 @@ namespace PowerPointQuestionnaire
 
             if (window.ShowDialog() == true)
             {
-                try
+                var choices = (int) window.ChoicesComboBox.SelectionBoxItem;
+                if (!_questionnaireUtil.Check(slide))
                 {
-                    if (!_questionnaireUtil.Check(slide))
+                    //CreateQuestionnaireSlideRecord
+                    var questionnaire = new QuestionnaireModel()
                     {
-                        //CreateQuestionnaireSlideRecord
-                        var questionnaire = new QuestionnaireModel()
-                        {
-                            choices = (int)window.ChoicesComboBox.SelectionBoxItem
-                        };
+                        choices = choices
+                    };
 
+                    try
+                    {
                         CreateQuestionnaireSlideRecord(slide, questionnaire);
                     }
-                    else
+                    catch
                     {
-                        //UpdateSelectedSlide
-
-                        var questionnaire = _questionnaireUtil.Deserialize(slide);
-
-                        questionnaire.choices = (int)window.ChoicesComboBox.SelectionBoxItem;
+                        _questionnaireUtil.Unmark(slide);
+                        MessageBox.Show("问卷设置失败了,这可能是个网络错误");
+                    }
+                    finally
+                    {
+                        RefreshSetAndAdd();
                     }
                 }
-                catch
+                else
                 {
-                    _questionnaireUtil.Unmark(slide);
-                    MessageBox.Show("问卷设置失败了,这可能是个网络错误");
-                }
-                finally
-                {
-                    RefreshSetAndAdd();
+                    //UpdateSelectedSlide
+                    var questionnaire = _questionnaireUtil.Deserialize(slide);
+                    questionnaire.choices = choices;
+
+                    _questionnaireUtil.Mark(slide, questionnaire);
                 }
 
             }
@@ -306,11 +254,11 @@ namespace PowerPointQuestionnaire
             }
             catch
             {
+                Console.WriteLine("delete failed");
             }
             finally
             {
                 _questionnaireUtil.Unmark(_selectedSlide);
-
                 RefreshSetAndAdd();
             }
         }
@@ -324,11 +272,14 @@ namespace PowerPointQuestionnaire
         {
             var slide = _selectedSlide;
 
+            GoToSlidePage(slide);
+        }
+
+        private async void GoToSlidePage(PowerPoint.Slide slide)
+        {
             if (!_questionnaireUtil.Check(slide))
             {
-#if DEBUG
-                MessageBox.Show("无效的问卷");
-#endif
+                //MessageBox.Show("无效的问卷.");
                 return;
             }
 
@@ -336,23 +287,22 @@ namespace PowerPointQuestionnaire
 
             if (questionnaire.user != AuthService.Me._id.ToString())
             {
-#if DEBUG
-                MessageBox.Show("这个问卷不是你创建的");
-#endif
+                //MessageBox.Show("这个问卷不是你创建的.");
                 return;
             }
 
-            var callback = new Action(() =>
+            try
             {
-                var questioinnaireId = _questionnaireUtil.Deserialize(_selectedSlide).id;
-                Process.Start(baseUrl + "questionnaires/" + questioinnaireId);
-            });
-            
+                var tempFile = await _questionnaireUtil.UploadAsync(slide);
+                questionnaire.tempFileId = tempFile._id;
+                var updated = await _questionnaireUtil.UpdateAsync(questionnaire);
 
-            Task.Factory.StartNew(() =>
+                Process.Start(baseUrl + "questionnaires/" + updated.id);
+            }
+            catch (Exception e)
             {
-                UpdateSelectedSlide(slide, questionnaire, callback);
-            });
+                MessageBox.Show("网络错误: "+e.Message);
+            }
         }
     }
 }

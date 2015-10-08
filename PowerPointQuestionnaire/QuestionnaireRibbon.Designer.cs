@@ -39,7 +39,7 @@
             this.usernameLabel = this.Factory.CreateRibbonLabel();
             this.loginButton = this.Factory.CreateRibbonButton();
             this.slideOperationGroup = this.Factory.CreateRibbonGroup();
-            this.addNewQuestionnaireSlideButton = this.Factory.CreateRibbonButton();
+            this.addNewSlideButton = this.Factory.CreateRibbonButton();
             this.setSlideButton = this.Factory.CreateRibbonButton();
             this.buttonCancel = this.Factory.CreateRibbonButton();
             this.errorLabel = this.Factory.CreateRibbonLabel();
@@ -81,7 +81,7 @@
             // 
             // slideOperationGroup
             // 
-            this.slideOperationGroup.Items.Add(this.addNewQuestionnaireSlideButton);
+            this.slideOperationGroup.Items.Add(this.addNewSlideButton);
             this.slideOperationGroup.Items.Add(this.setSlideButton);
             this.slideOperationGroup.Items.Add(this.buttonCancel);
             this.slideOperationGroup.Items.Add(this.errorLabel);
@@ -89,11 +89,11 @@
             this.slideOperationGroup.Name = "slideOperationGroup";
             this.slideOperationGroup.Visible = false;
             // 
-            // addNewQuestionnaireSlideButton
+            // addNewSlideButton
             // 
-            this.addNewQuestionnaireSlideButton.Label = "添加新问卷页";
-            this.addNewQuestionnaireSlideButton.Name = "addNewQuestionnaireSlideButton";
-            this.addNewQuestionnaireSlideButton.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.addNewQuestionnaireSlideButton_Click);
+            this.addNewSlideButton.Label = "添加新问卷页";
+            this.addNewSlideButton.Name = "addNewSlideButton";
+            this.addNewSlideButton.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.addNewSlideButton_Click);
             // 
             // setSlideButton
             // 
@@ -155,7 +155,7 @@
         private Microsoft.Office.Tools.Ribbon.RibbonTab tab;
         internal Microsoft.Office.Tools.Ribbon.RibbonGroup slideOperationGroup;
         internal Microsoft.Office.Tools.Ribbon.RibbonButton setSlideButton;
-        internal Microsoft.Office.Tools.Ribbon.RibbonButton addNewQuestionnaireSlideButton;
+        internal Microsoft.Office.Tools.Ribbon.RibbonButton addNewSlideButton;
         internal Microsoft.Office.Tools.Ribbon.RibbonButton buttonCancel;
         internal Microsoft.Office.Tools.Ribbon.RibbonLabel usernameLabel;
         internal Microsoft.Office.Tools.Ribbon.RibbonLabel errorLabel;

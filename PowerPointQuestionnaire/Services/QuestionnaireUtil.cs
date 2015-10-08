@@ -94,9 +94,9 @@ namespace PowerPointQuestionnaire.Services
                 reqStream.Close();
             }
 
-            using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
+            using (var response = (HttpWebResponse)request.GetResponse())
             {
-                using (StreamReader reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8))
+                using (var reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8))
                 {
                     var responseData = reader.ReadToEnd();
                     var questionnareObject = JsonConvert.DeserializeObject<QuestionnaireModel>(responseData);
@@ -129,9 +129,9 @@ namespace PowerPointQuestionnaire.Services
                 reqStream.Close();
             }
 
-            using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
+            using (var response = (HttpWebResponse)request.GetResponse())
             {
-                using (StreamReader reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8))
+                using (var reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8))
                 {
                     var responseData = reader.ReadToEnd();
                     var questionnareObject = JsonConvert.DeserializeObject<QuestionnaireModel>(responseData);
@@ -207,7 +207,6 @@ namespace PowerPointQuestionnaire.Services
             return Task.Factory.StartNew(()=> UploadTempFile(questionnaireImageFile));
         }
 
-
         public dynamic UploadTempFile(string fileToBeUploaded)
         {
             //Console.WriteLine("the dir id:");
@@ -245,6 +244,7 @@ namespace PowerPointQuestionnaire.Services
             return JsonConvert.DeserializeObject(fullResponse);
         }
 
+        //deprecated
         public string GetSlideMd5(Slide slide)
         {
             var questionnaire = Deserialize(slide);
@@ -258,6 +258,7 @@ namespace PowerPointQuestionnaire.Services
             return GetFileMd5Code(questionnaireImageFile);
         }
 
+        //deprecated
         private string GetFileMd5Code(string filePath)
         {
             StringBuilder builder = new StringBuilder();
