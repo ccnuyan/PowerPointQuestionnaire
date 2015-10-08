@@ -1,18 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
+using System.Diagnostics;
 using System.Net;
-using System.Security.Claims;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Forms.Layout;
-using System.Windows.Forms.VisualStyles;
 using Microsoft.Office.Tools.Ribbon;
-using Newtonsoft.Json;
 using PowerPointQuestionnaire.Components;
 using PowerPointQuestionnaire.Controls;
 using PowerPointQuestionnaire.Interfaces;
@@ -25,6 +16,13 @@ namespace PowerPointQuestionnaire
 {
     public partial class QuestionnaireRibbon
     {
+
+#if DEBUG
+        const string baseUrl = "http://localhost.:3000/";
+#else
+        const string baseUrl= "http://www.iccnu.net/";
+#endif
+
         private LoginWindow _loginWindow;
         private QuestionnaireOptionsWindow _questionnaireOptionsWindow;
 
@@ -44,14 +42,29 @@ namespace PowerPointQuestionnaire
             RefreshSetAndAdd();
 
             AppWapper.App.SlideSelectionChanged += App_SlideSelectionChanged;
+            AppWapper.App.SlideShowNextSlide += App_SlideShowNextSlide;
             AppWapper.App.PresentationOpen += App_PresentationOpen;
             AppWapper.App.PresentationSave += App_PresentationSave;
+
 
             _loginWindow = new LoginWindow();
             _loginWindow.Closed += LoginWindowClosed;
 
             _questionnaireOptionsWindow = new QuestionnaireOptionsWindow();
             _questionnaireOptionsWindow.Closed += QuestionnaireOptionsWindowClosed;
+        }
+
+        private void App_SlideShowNextSlide(PowerPoint.SlideShowWindow Wn)
+        {
+            var index = Wn.View.CurrentShowPosition;
+
+            var slide = Wn.Presentation.Slides[index];
+
+            if (_questionnaireUtil.Check(slide))
+            {
+                var questioinnaireId = _questionnaireUtil.Deserialize(slide).id;
+                Process.Start(baseUrl + "questionnaires/" + questioinnaireId);
+            }
         }
 
         private void LoginWindowClosed(object sender, EventArgs e)
@@ -90,9 +103,6 @@ namespace PowerPointQuestionnaire
             RefreshSetAndAdd();
         }
 
-
-
-
         private void App_PresentationSave(PowerPoint.Presentation Pres)
         {
             foreach (PowerPoint.Slide slide in Pres.Slides)
@@ -101,7 +111,7 @@ namespace PowerPointQuestionnaire
 
                 var questionnaire = _questionnaireUtil.Deserialize(slide);
 
-                if (questionnaire.user != AuthService.Me._id.ToString())continue;
+                if (questionnaire.user != AuthService.Me._id.ToString()) continue;
 
                 Task.Factory.StartNew(() =>
                 {
@@ -114,6 +124,7 @@ namespace PowerPointQuestionnaire
         public void RefreshSetAndAdd()
         {
             var slide = _selectedSlide;
+            questionnairePageButton.Visible = false;
 
             if (AuthService.Me == null || slide == null)
             {
@@ -135,6 +146,8 @@ namespace PowerPointQuestionnaire
                 }
                 else
                 {
+                    questionnairePageButton.Visible = true;
+
                     setSlideButton.Visible = true;
                     buttonCancel.Visible = true;
 
@@ -164,7 +177,7 @@ namespace PowerPointQuestionnaire
             var slide = AppWapper.App.ActivePresentation.Slides.Add(index, PowerPoint.PpSlideLayout.ppLayoutBlank);
 
             var textbox = slide.Shapes.AddTextbox(Office.MsoTextOrientation.msoTextOrientationHorizontal, 50, 50, 600, 50);//向当前PPT添加文本框
-            textbox.TextFrame.TextRange.Text = questionnaire.allowMultiple ? "调查(多选)" : "调查:";
+            textbox.TextFrame.TextRange.Text = "调查:";
             textbox.TextFrame.TextRange.Font.Size = 48;//设置文本字体大小
 
             for (var i = 0; i < questionnaire.choices; i++)
@@ -215,7 +228,6 @@ namespace PowerPointQuestionnaire
             {
                 flag = true;
                 questionnaireToUpdate.choices = questionnaire.choices;
-                questionnaireToUpdate.allowMultiple = questionnaire.allowMultiple;
             }
 
             if (!flag) return;
@@ -252,7 +264,6 @@ namespace PowerPointQuestionnaire
             {
                 var questionnaire = new QuestionnaireModel()
                 {
-                    allowMultiple = _questionnaireOptionsWindow.AllowMultipleCheck.IsChecked == true,
                     choices = (int)_questionnaireOptionsWindow.ChoicesComboBox.SelectionBoxItem
                 };
 
@@ -281,7 +292,6 @@ namespace PowerPointQuestionnaire
                         //CreateQuestionnaireSlideRecord
                         var questionnaire = new QuestionnaireModel()
                         {
-                            allowMultiple = window.AllowMultipleCheck.IsChecked == true,
                             choices = (int)window.ChoicesComboBox.SelectionBoxItem
                         };
 
@@ -293,7 +303,6 @@ namespace PowerPointQuestionnaire
 
                         var questionnaire = _questionnaireUtil.Deserialize(slide);
 
-                        questionnaire.allowMultiple = window.AllowMultipleCheck.IsChecked == true;
                         questionnaire.choices = (int)window.ChoicesComboBox.SelectionBoxItem;
 
                         UpdateSelectedSlide(slide, questionnaire);
@@ -328,6 +337,17 @@ namespace PowerPointQuestionnaire
 
                 RefreshSetAndAdd();
             }
+        }
+
+        private void homePageButton_Click(object sender, RibbonControlEventArgs e)
+        {
+            Process.Start(baseUrl);
+        }
+
+        private void questionnairePageButton_Click(object sender, RibbonControlEventArgs e)
+        {
+            var questioinnaireId = _questionnaireUtil.Deserialize(_selectedSlide).id;
+            Process.Start(baseUrl + "questionnaires/" + questioinnaireId);
         }
     }
 }

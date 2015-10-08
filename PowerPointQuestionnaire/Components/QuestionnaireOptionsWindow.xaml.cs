@@ -43,7 +43,6 @@ namespace PowerPointQuestionnaire.Components
         public void Initialize(QuestionnaireModel questionnaire)
         {
             ChoicesComboBox.SelectedItem = questionnaire.choices;
-            AllowMultipleCheck.IsChecked = questionnaire.allowMultiple;
         }
 
         private void Cancel_Click(object sender, RoutedEventArgs e)

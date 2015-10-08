@@ -43,9 +43,13 @@
             this.setSlideButton = this.Factory.CreateRibbonButton();
             this.buttonCancel = this.Factory.CreateRibbonButton();
             this.errorLabel = this.Factory.CreateRibbonLabel();
+            this.webSiteGroup = this.Factory.CreateRibbonGroup();
+            this.homePageButton = this.Factory.CreateRibbonButton();
+            this.questionnairePageButton = this.Factory.CreateRibbonButton();
             this.tab.SuspendLayout();
             this.authGroup.SuspendLayout();
             this.slideOperationGroup.SuspendLayout();
+            this.webSiteGroup.SuspendLayout();
             this.SuspendLayout();
             // 
             // tab
@@ -53,6 +57,7 @@
             this.tab.ControlId.ControlIdType = Microsoft.Office.Tools.Ribbon.RibbonControlIdType.Office;
             this.tab.Groups.Add(this.authGroup);
             this.tab.Groups.Add(this.slideOperationGroup);
+            this.tab.Groups.Add(this.webSiteGroup);
             this.tab.Label = "PPT问卷";
             this.tab.Name = "tab";
             // 
@@ -107,6 +112,25 @@
             this.errorLabel.Label = " ";
             this.errorLabel.Name = "errorLabel";
             // 
+            // webSiteGroup
+            // 
+            this.webSiteGroup.Items.Add(this.homePageButton);
+            this.webSiteGroup.Items.Add(this.questionnairePageButton);
+            this.webSiteGroup.Label = "网站";
+            this.webSiteGroup.Name = "webSiteGroup";
+            // 
+            // homePageButton
+            // 
+            this.homePageButton.Label = "ICCNU主页";
+            this.homePageButton.Name = "homePageButton";
+            this.homePageButton.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.homePageButton_Click);
+            // 
+            // questionnairePageButton
+            // 
+            this.questionnairePageButton.Label = "答题页";
+            this.questionnairePageButton.Name = "questionnairePageButton";
+            this.questionnairePageButton.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.questionnairePageButton_Click);
+            // 
             // QuestionnaireRibbon
             // 
             this.Name = "QuestionnaireRibbon";
@@ -119,6 +143,8 @@
             this.authGroup.PerformLayout();
             this.slideOperationGroup.ResumeLayout(false);
             this.slideOperationGroup.PerformLayout();
+            this.webSiteGroup.ResumeLayout(false);
+            this.webSiteGroup.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -133,6 +159,9 @@
         internal Microsoft.Office.Tools.Ribbon.RibbonButton buttonCancel;
         internal Microsoft.Office.Tools.Ribbon.RibbonLabel usernameLabel;
         internal Microsoft.Office.Tools.Ribbon.RibbonLabel errorLabel;
+        internal Microsoft.Office.Tools.Ribbon.RibbonGroup webSiteGroup;
+        internal Microsoft.Office.Tools.Ribbon.RibbonButton homePageButton;
+        internal Microsoft.Office.Tools.Ribbon.RibbonButton questionnairePageButton;
     }
 
     partial class ThisRibbonCollection

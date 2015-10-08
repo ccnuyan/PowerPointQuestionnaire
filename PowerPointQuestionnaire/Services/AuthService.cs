@@ -18,9 +18,7 @@ namespace PowerPointQuestionnaire.Services
 
 #if DEBUG
         private const string RestApiUrl = "http://localhost.:3000/api/";
-#endif
-
-#if RELEASE
+#else
         private const string RestApiUrl = "http://www.iccnu.net/api/";
 #endif
 

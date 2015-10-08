@@ -30,9 +30,7 @@ namespace PowerPointQuestionnaire.Services
 
 #if DEBUG
         private const string RestApiUrl = "http://localhost.:3000/api/";
-#endif
-
-#if RELEASE
+#else
         private const string RestApiUrl = "http://www.iccnu.net/api/";
 #endif
 
@@ -190,8 +188,12 @@ namespace PowerPointQuestionnaire.Services
 
         public bool Compare(QuestionnaireModel q1, QuestionnaireModel q2)
         {
-            return q1.allowMultiple == q2.allowMultiple &&
-                   q1.choices == q2.choices;
+            if (q1.id != q2.id)
+            {
+                throw new Exception("comparing with different id");
+            }
+
+            return q1.choices == q2.choices;
         }
 
         public Task<dynamic> UploadAsync(Slide slide)

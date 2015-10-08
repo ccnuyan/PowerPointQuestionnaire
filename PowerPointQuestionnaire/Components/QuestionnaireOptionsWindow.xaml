@@ -4,6 +4,7 @@
         WindowStyle="SingleBorderWindow"
         WindowState="Normal"
         ResizeMode="NoResize"
+         ShowInTaskbar="False"
         Width="400"
         Height="140"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -18,7 +19,6 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
@@ -28,9 +28,6 @@
         <TextBlock Grid.Row="1" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">选项个数：</TextBlock>
         <ComboBox Name="ChoicesComboBox" Width="150" Height="20" Grid.Column="1"  Grid.Row="1"  >
         </ComboBox>
-        <TextBlock Grid.Row="2" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">允许多选：</TextBlock>
-        <CheckBox VerticalAlignment="Bottom" Name="AllowMultipleCheck" Width="150" Height="20" Grid.Column="1"  Grid.Row="2"  >
-        </CheckBox>
         <TextBlock Name="ErrorTextBox" Grid.Row="3" Grid.ColumnSpan="2" Grid.Column="0" HorizontalAlignment="left" Margin="10,0,0,0" VerticalAlignment="Center" Foreground="Red"></TextBlock>
         <Grid Margin="100,0,20,0" Grid.Column="1"  Grid.Row="3">
             <Grid.ColumnDefinitions>

@@ -1,6 +1,6 @@
 ﻿<Window x:Class="PowerPointQuestionnaire.Controls.LoginWindow"
         WindowStartupLocation="CenterScreen"
-        Topmost="True"
+        Topmost="True"  ShowInTaskbar="False"
         WindowStyle="SingleBorderWindow"
         WindowState="Normal"
         ResizeMode="NoResize"

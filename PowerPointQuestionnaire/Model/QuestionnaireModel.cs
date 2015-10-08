@@ -11,8 +11,6 @@ namespace PowerPointQuestionnaire.Model
     {
         public string user { get; set; }
 
-        public bool allowMultiple { get; set; }
-
         public int choices { get; set; }
 
         [JsonProperty("_id")]
