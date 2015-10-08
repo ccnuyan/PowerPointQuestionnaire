@@ -44,7 +44,6 @@ namespace PowerPointQuestionnaire
             AppWapper.App.SlideSelectionChanged += App_SlideSelectionChanged;
             AppWapper.App.SlideShowNextSlide += App_SlideShowNextSlide;
             AppWapper.App.PresentationOpen += App_PresentationOpen;
-            AppWapper.App.PresentationSave += App_PresentationSave;
 
 
             _loginWindow = new LoginWindow();
@@ -103,23 +102,6 @@ namespace PowerPointQuestionnaire
             RefreshSetAndAdd();
         }
 
-        private void App_PresentationSave(PowerPoint.Presentation Pres)
-        {
-            foreach (PowerPoint.Slide slide in Pres.Slides)
-            {
-                if (!_questionnaireUtil.Check(slide)) continue;
-
-                var questionnaire = _questionnaireUtil.Deserialize(slide);
-
-                if (questionnaire.user != AuthService.Me._id.ToString()) continue;
-
-                Task.Factory.StartNew(() =>
-                {
-                    UpdateSelectedSlide(slide, questionnaire);
-                });
-            }
-        }
-
 
         public void RefreshSetAndAdd()
         {
@@ -154,11 +136,6 @@ namespace PowerPointQuestionnaire
                     setSlideButton.Label = "重新设置问卷";
 
                     errorLabel.Label = " ";
-
-                    Task.Factory.StartNew(() =>
-                    {
-                        UpdateSelectedSlide(slide, questionnaire);
-                    });
                 }
             }
             else
@@ -209,7 +186,7 @@ namespace PowerPointQuestionnaire
             }
         }
 
-        private async void UpdateSelectedSlide(PowerPoint.Slide slide, QuestionnaireModel questionnaire)
+        private async void UpdateSelectedSlide(PowerPoint.Slide slide, QuestionnaireModel questionnaire, Action callback = null)
         {
             var questionnaireToUpdate = _questionnaireUtil.Get(questionnaire.id);
 
@@ -236,6 +213,7 @@ namespace PowerPointQuestionnaire
             {
                 var updated = await _questionnaireUtil.UpdateAsync(questionnaireToUpdate);
                 _questionnaireUtil.Mark(slide, updated);
+                callback();
             }
             catch
             {
@@ -304,8 +282,6 @@ namespace PowerPointQuestionnaire
                         var questionnaire = _questionnaireUtil.Deserialize(slide);
 
                         questionnaire.choices = (int)window.ChoicesComboBox.SelectionBoxItem;
-
-                        UpdateSelectedSlide(slide, questionnaire);
                     }
                 }
                 catch
@@ -346,8 +322,37 @@ namespace PowerPointQuestionnaire
 
         private void questionnairePageButton_Click(object sender, RibbonControlEventArgs e)
         {
-            var questioinnaireId = _questionnaireUtil.Deserialize(_selectedSlide).id;
-            Process.Start(baseUrl + "questionnaires/" + questioinnaireId);
+            var slide = _selectedSlide;
+
+            if (!_questionnaireUtil.Check(slide))
+            {
+#if DEBUG
+                MessageBox.Show("无效的问卷");
+#endif
+                return;
+            }
+
+            var questionnaire = _questionnaireUtil.Deserialize(slide);
+
+            if (questionnaire.user != AuthService.Me._id.ToString())
+            {
+#if DEBUG
+                MessageBox.Show("这个问卷不是你创建的");
+#endif
+                return;
+            }
+
+            var callback = new Action(() =>
+            {
+                var questioinnaireId = _questionnaireUtil.Deserialize(_selectedSlide).id;
+                Process.Start(baseUrl + "questionnaires/" + questioinnaireId);
+            });
+            
+
+            Task.Factory.StartNew(() =>
+            {
+                UpdateSelectedSlide(slide, questionnaire, callback);
+            });
         }
     }
 }

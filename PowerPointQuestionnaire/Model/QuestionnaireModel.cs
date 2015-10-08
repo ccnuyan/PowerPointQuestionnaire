@@ -23,8 +23,6 @@ namespace PowerPointQuestionnaire.Model
 
     public class QuestionnaireAttachment
     {
-        public string user { get; set; }
-
         public int size { get; set; }
 
         public string md5 { get; set; }
